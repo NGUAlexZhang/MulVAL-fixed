@@ -9,7 +9,8 @@ default: ${TARGET}
 	javac $*.java -cp ${CLASSPATH}:${LIBS}
 
 install: ${TARGET}
-	cp ${TARGET} ../../bin/adapter
+	mkdir -p ../../bin/adapter
+	mv ${TARGET} ../../bin/adapter
 
 clean:
 	rm -f *.class

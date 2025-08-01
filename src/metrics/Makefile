@@ -8,7 +8,8 @@ default: ${TARGET}
 	javac $*.java 
 
 install: ${TARGET}
-	cp ${TARGET} ../../bin/metrics
+	mkdir -p ../../bin/metrics
+	mv ${TARGET} ../../bin/metrics
 
 clean:
 	rm -f *.class

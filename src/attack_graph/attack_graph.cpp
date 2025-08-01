@@ -66,7 +66,7 @@ arcLabelMode arc_mode = METRICMODE;
 /* prune option determines the pruning method */
 pruneOption prune_option = noPrune;
 
-/* global data used in the various dfs algorithms*/
+/* global _data used in the various dfs algorithms*/
 int currentCounter = 0;
 /* used in reAssignNodeNum */
 int currentNodeNum = 1;
@@ -94,7 +94,7 @@ metric_map mp[] = {
 
 int size_mp = 10;
 
-graph_data data(mp, size_mp); 
+graph_data _data(mp, size_mp); 
 
 // initialize static members
 //Fact *graph_data::goal =0;
@@ -176,7 +176,7 @@ TraceStep::TraceStep(int r, char *m, Fact *f, Conjunct *c) {
     metric = atof(m);
   }
   else{
-    metric = data.metrics[m];
+    metric = _data.metrics[m];
   }
   
   fact = f; 
@@ -248,7 +248,7 @@ void Rules::add_rule( int rulenum, char* desc )
 	      metrics[rulenum] = atof(ruleMetricString);
 	    }
 	    else{
-	      metrics[rulenum] = data.metrics[ruleMetricString];
+	      metrics[rulenum] = _data.metrics[ruleMetricString];
 	    }
 	  }
 	  else{
@@ -650,7 +650,7 @@ void AndNode::dfs(dfsAlgorithm alg){
   /* postprocessing the node */
   switch(alg){
   case reAssignNodeNum:
-    //    cerr << nodeNum << ": " << data.ruleList.rules[rulenum] << endl;
+    //    cerr << nodeNum << ": " << _data.ruleList.rules[rulenum] << endl;
     break;
   }
   return;
@@ -781,7 +781,7 @@ void RenderRule( renderMode mode, int indent, int rulenum )
    switch (mode) {
       case  TEXT:
         cout << indentation << "RULE " << rulenum << " : " 
-             << data.ruleList.rules[rulenum] << endl;
+             << _data.ruleList.rules[rulenum] << endl;
       break;
   
       case HTML:
@@ -799,7 +799,7 @@ void RenderRule( renderMode mode, int indent, int rulenum, int nodeNum )
    switch (mode) {
       case  TEXT:
         cout << indentation << "(" << nodeNum << ") " << "RULE " << rulenum << " : " 
-             << data.ruleList.rules[rulenum] << endl;
+             << _data.ruleList.rules[rulenum] << endl;
       break;
   
       case HTML:
@@ -843,7 +843,7 @@ bool OrNode::Render2(arcLabelMode mode)
 bool AndNode::Render2(arcLabelMode mode)
 {
    ostringstream temp;
-   temp << "RULE " << rulenum  << " (" << data.ruleList.rules[rulenum] << ")";
+   temp << "RULE " << rulenum  << " (" << _data.ruleList.rules[rulenum] << ")";
    outputVertex(temp.str(), metric);
    for(Arc *arc=outGoing.gethead(); arc != NULL; arc=outGoing.getnext()) {
      if (arc->getDst()->Render2(mode))
@@ -1131,7 +1131,7 @@ int main(int argc, char *argv[]  )
 
    //dump_tables();
    //
-   if (data.goals.size() == 0){
+   if (_data.goals.size() == 0){
      cerr << "No attack paths found.\n";
      return 1;
    }
@@ -1149,7 +1149,7 @@ int main(int argc, char *argv[]  )
    }
 
    //   if (test) {
-      // extra data on the end
+      // extra _data on the end
    /* cout << "nodeCount: " <<  graph_data::nodeCount << ", " 
            << "orNodeCount: " <<  graph_data::orNodeCount << ", " 
            << "leafNodeCount: " <<  graph_data::leafNodeCount <<  endl; */
@@ -1165,7 +1165,7 @@ int build_graph(void)
    // loop through all the unique trace steps 
    traceStepMap::iterator i,j;
    traceStepMap *Map;
-   Map = &data.all_trace_steps.traceSteps;
+   Map = &_data.all_trace_steps.traceSteps;
    for( i=Map->begin(); i != Map->end(); )
    {
       string ts_key = i->first;
@@ -1182,27 +1182,27 @@ int build_graph(void)
       Map->erase( j );
 
       string fact_key = f->key;
-      OrNode *orNode = data.all_or_nodes.addOrNode(fact_key, f);
+      OrNode *orNode = _data.all_or_nodes.addOrNode(fact_key, f);
       AndNode *andNode = new AndNode(num, metric);  
 
       if( andNode == NULL || orNode == NULL) {
           cerr << "Failed to create new node\n";
           return -1;
       }
-      data.all_and_nodes.nodeList.add( *andNode );
+      _data.all_and_nodes.nodeList.add( *andNode );
        graph_data::nodeCount++;
        andNode->nodeNum = graph_data::nodeCount;
          andNode->parentNodeNum = orNode->nodeNum;
       orNode->outGoing.add(*(new Arc(orNode, andNode)));
-      for( Fact *fa= c->factList.gethead(); fa >0; fa = c->factList.getnext()) {
+      for( Fact *fa= c->factList.gethead(); fa != 0; fa = c->factList.getnext()) {
            fact_key = fa->key; 
            Node *newNode;
            Type factType = fa->predicate->type; 
            if( factType == primitive) {
-               newNode = data.all_leaf_nodes.addLeafNode(fact_key, fa); 
+               newNode = _data.all_leaf_nodes.addLeafNode(fact_key, fa); 
            }
            else if( factType == derived) {
-               newNode = data.all_or_nodes.addOrNode(fact_key, fa); 
+               newNode = _data.all_or_nodes.addOrNode(fact_key, fa); 
            }
 	   if (factType == primitive || factType == derived){
 	     andNode->outGoing.add(*(new Arc(andNode, newNode)));
@@ -1214,11 +1214,11 @@ int build_graph(void)
 
    //Populating the head nodes
    NodeMap::iterator k;
-   for (k = data.goals.begin(); k != data.goals.end(); k++) {
+   for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
      string fact_key = k->first;
-     Node *headNode = data.all_or_nodes.nodes[fact_key];
+     Node *headNode = _data.all_or_nodes.nodes[fact_key];
      if (headNode != NULL){
-       data.goals[fact_key] = headNode;
+       _data.goals[fact_key] = headNode;
      }
      else{
        cerr << "Warning: attack goal "<<fact_key<<" was not computed."<<endl;
@@ -1231,17 +1231,17 @@ int build_graph(void)
      break;
      /*
    case unFounded: 
-     data.headNode->RemoveUnfoundedEdges();
+     _data.headNode->RemoveUnfoundedEdges();
      break;
      */
    case nonSimple:
-     for (k = data.goals.begin(); k != data.goals.end(); k++) {
+     for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
        Node *headNode = k->second;
        if (headNode != NULL){
 	 headNode->allSimplePaths();
        }
      }
-     for (k = data.goals.begin(); k != data.goals.end(); k++) {
+     for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
        Node *headNode = k->second;
        if (headNode != NULL){
 	 headNode->pruneUselessEdges();
@@ -1255,7 +1255,7 @@ int build_graph(void)
    currentCounter++;
    currentNodeNum=1;
    currentArcNum = 1;
-   for (k = data.goals.begin(); k != data.goals.end(); k++) {
+   for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
      Node *headNode = k->second;
      if (headNode != NULL){
        headNode->dfs(reAssignNodeNum);
@@ -1265,7 +1265,7 @@ int build_graph(void)
    //Assign metrics for AssetRank
    if (useMetrics){
      cerr << "Computing metrics..." << endl;
-     for (k = data.goals.begin(); k != data.goals.end(); k++) {
+     for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
        Node *headNode = k->second;
        if (headNode != NULL){
 	 headNode->bestMetric();
@@ -1279,7 +1279,7 @@ int build_graph(void)
 int build_visual(bool arc_and_node)
 {
   NodeMap::iterator k;
-  for (k = data.goals.begin(); k != data.goals.end(); k++) {
+  for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
     string fact_key = k->first;
     Node *headNode = k->second;
     if (headNode != NULL){
@@ -1303,7 +1303,7 @@ int build_cnf()
   NodeMap::iterator k;
   Node *headNode;
 
-  for (k = data.goals.begin(); k != data.goals.end(); k++) {
+  for (k = _data.goals.begin(); k != _data.goals.end(); k++) {
      headNode = k->second;
      if(headNode != NULL) {
        headNode->TransformToCNF(0);
@@ -1356,22 +1356,22 @@ int build_cnf()
 //void dump_tables(void)
 //{
 //      /*
-//      cout << "nodeCount=" << data.nodeCount << endl;
-//      cout << "goal: " << data.goal->key << endl;
+//      cout << "nodeCount=" << _data.nodeCount << endl;
+//      cout << "goal: " << _data.goal->key << endl;
 
-//      int rul =  data.headNode->rulenum;
+//      int rul =  _data.headNode->rulenum;
 
-//      cout << "headNode: " << data.headNode->label->key  << endl;
+//      cout << "headNode: " << _data.headNode->label->key  << endl;
 
 //      cout << "RULES:\n";
 
-//      for ( int i=0; i<= data.ruleList.count; i++ ) {
+//      for ( int i=0; i<= _data.ruleList.count; i++ ) {
 
 //        cout << i << " " ; 
 
-//        if( data.ruleList.rules[ i ] != 0 ) {  
+//        if( _data.ruleList.rules[ i ] != 0 ) {  
 
-//          cout <<  data.ruleList.rules[ i ] ;
+//          cout <<  _data.ruleList.rules[ i ] ;
 
 //        }
 
@@ -1401,7 +1401,7 @@ int build_cnf()
 
 //      cout << "\nUnique FACTS:\n"; 
 
-//      Fmap =  &data.all_facts.facts;
+//      Fmap =  &_data.all_facts.facts;
 
 //      cout << Fmap->size() << endl;
 
@@ -1417,7 +1417,7 @@ int build_cnf()
 
 //      cout << "\nUnique Trace Steps: \n ";
 
-//      Smap =  &data.all_trace_steps.traceSteps;
+//      Smap =  &_data.all_trace_steps.traceSteps;
 
 //      cout << Smap->size() << endl;
 
@@ -1451,7 +1451,7 @@ int build_cnf()
 
 //      cout << "\nOR nodes:\n"; 
 
-//      Nmap =  &data.all_or_nodes.nodes;
+//      Nmap =  &_data.all_or_nodes.nodes;
 
 //      for (Ni = Nmap->begin() ; Ni != Nmap->end(); Ni++) {
 
@@ -1477,7 +1477,7 @@ int build_cnf()
 
 //      cout << "\nAND nodes:\n"; 
 
-//      Queue<Node> nq =  data.all_and_nodes.nodeList;
+//      Queue<Node> nq =  _data.all_and_nodes.nodeList;
 
 //      for (Node *no = nq.gethead() ; no >0 ; no = nq.getnext()) {
 
@@ -1505,7 +1505,7 @@ int build_cnf()
 
 //      cout << "\nLEAF nodes:\n"; 
 
-//      Nmap =  &data.all_leaf_nodes.nodes;
+//      Nmap =  &_data.all_leaf_nodes.nodes;
 
 //      for (Ni = Nmap->begin() ; Ni != Nmap->end(); Ni++) {
 
